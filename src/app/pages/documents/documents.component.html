@@ -1,0 +1,171 @@
+<div class="flex-1 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-8 transition-colors duration-300">
+  <div class="w-full">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+      <div>
+        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Mis Documentos</h2>
+        <p class="text-slate-500 dark:text-slate-400">Gestiona todos los contratos y análisis generados.</p>
+      </div>
+      <button routerLink="/chat" [queryParams]="{mode: 'contrato'}" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 shadow-sm transition-colors whitespace-nowrap">
+        + Nuevo documento
+      </button>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="relative flex-1 max-w-md">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre o tipo..." 
+            [(ngModel)]="searchTerm"
+            class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white"
+          />
+        </div>
+        <button class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center gap-2">
+          <i class="fas fa-filter"></i> Filtros
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[600px]">
+          <thead>
+            <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+              <th class="px-6 py-4 font-medium">Nombre</th>
+              <th class="px-6 py-4 font-medium">Tipo</th>
+              <th class="px-6 py-4 font-medium">Estado</th>
+              <th class="px-6 py-4 font-medium">Fecha</th>
+              <th class="px-6 py-4 font-medium text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+            <tr *ngIf="loading">
+              <td colspan="5" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i>
+                <p>Cargando documentos...</p>
+              </td>
+            </tr>
+            <tr *ngIf="!loading && filteredDocs.length === 0">
+              <td colspan="5" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-folder-open text-2xl text-slate-300 dark:text-slate-500"></i>
+                </div>
+                No se encontraron documentos.
+              </td>
+            </tr>
+            
+            <tr *ngFor="let doc of filteredDocs" class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors group">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-file-alt"></i>
+                  </div>
+                  <span class="font-medium text-slate-900 dark:text-white text-sm">{{ doc.name }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                  {{ doc.type }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <span *ngIf="doc.signed" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                  <i class="fas fa-check-circle"></i> Firmado
+                </span>
+                <span *ngIf="!doc.signed" class="text-slate-400 dark:text-slate-500 text-xs font-medium">Borrador</span>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                {{ doc.createdAt | date:'dd/MM/yyyy' }}
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button *ngIf="!doc.signed" (click)="openSignature(doc)" class="p-2 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Firmar Digitalmente">
+                    <i class="fas fa-pen-nib"></i>
+                  </button>
+                  <button (click)="openExport(doc)" class="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Descargar / Exportar">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button (click)="handleDuplicate(doc)" class="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors" title="Duplicar y editar">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button (click)="handleShare()" class="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Compartir enlace">
+                    <i class="fas fa-share-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isSignatureModalOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <button (click)="isSignatureModalOpen = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+      <i class="fas fa-times w-5 h-5 flex justify-center items-center"></i>
+    </button>
+    <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+      <i class="fas fa-pen-nib text-xl"></i>
+    </div>
+    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Firmar Documento</h3>
+    <p class="text-slate-600 dark:text-slate-400 mb-4 text-sm">Firma digitalmente "{{ docToSign?.name }}"</p>
+    
+    <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl h-48 mb-6 flex items-center justify-center bg-slate-50 dark:bg-slate-900 cursor-crosshair">
+      <p class="text-slate-400 dark:text-slate-500 font-medium">Dibuja tu firma aquí (Simulación)</p>
+    </div>
+
+    <div class="flex gap-3">
+      <button (click)="isSignatureModalOpen = false" class="flex-1 py-2 px-4 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="saveSignature()" class="flex-1 py-2 px-4 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors shadow-lg shadow-amber-600/20">
+        Aplicar Firma
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isExportModalOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+    <button (click)="isExportModalOpen = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+      <i class="fas fa-times w-5 h-5 flex justify-center items-center"></i>
+    </button>
+    <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+      <i class="fas fa-file-export text-xl"></i>
+    </div>
+    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Exportar Documento</h3>
+    <p class="text-slate-600 dark:text-slate-400 mb-6 text-sm">Selecciona el formato para "{{ docToExport?.name }}"</p>
+    
+    <div class="space-y-3 mb-6">
+      <button class="w-full flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 group transition-all text-left">
+        <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <i class="fas fa-file-pdf"></i>
+        </div>
+        <div>
+          <p class="font-bold text-slate-900 dark:text-white">Documento PDF</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Formato seguro no editable</p>
+        </div>
+      </button>
+      
+      <button class="w-full flex items-center gap-3 p-4 border border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 group transition-all text-left">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <i class="fas fa-file-word"></i>
+        </div>
+        <div>
+          <p class="font-bold text-slate-900">Microsoft Word</p>
+          <p class="text-xs text-slate-500">Documento editable (.docx)</p>
+        </div>
+      </button>
+    </div>
+
+    <div class="flex gap-3">
+      <button (click)="isExportModalOpen = false" class="flex-1 py-2 px-4 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="exportDoc()" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+        Descargar
+      </button>
+    </div>
+  </div>
+</div>

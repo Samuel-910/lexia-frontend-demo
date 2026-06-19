@@ -1,0 +1,233 @@
+<div class="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans overflow-hidden transition-colors duration-300">
+
+  <!-- Mobile Sidebar Overlay -->
+  <div *ngIf="isSidebarOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+    (click)="isSidebarOpen = false">
+  </div>
+
+  <!-- Sidebar -->
+  <aside
+    [class]="'flex-shrink-0 fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-950 text-slate-800 dark:text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ' + (isSidebarOpen ? 'translate-x-0' : '-translate-x-full')">
+
+    <div class="h-[88px] px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-lg shadow-md shadow-blue-500/20">
+          L</div>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">LexIA</h1>
+      </div>
+      <button (click)="isSidebarOpen = false"
+        class="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-white">
+        <i class="fas fa-times w-6 h-6 flex items-center justify-center text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Resto del sidebar con borde derecho -->
+    <div class="flex-1 flex flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden">
+      <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <a *ngFor="let item of navItems" [routerLink]="item.path"
+          routerLinkActive="bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 font-semibold"
+          [routerLinkActiveOptions]="{exact: false}" #rla="routerLinkActive"
+          [class]="'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ' + (!rla.isActive ? 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' : '')"
+          (click)="isSidebarOpen = false">
+          <i [class]="item.icon + ' w-5 text-center'"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      </nav>
+
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+        <!-- Upgrade Button Sidebar -->
+        <button *ngIf="user?.plan === 'Gratuito'" (click)="authService.pricingModalOpen$.next(true); isSidebarOpen = false"
+          class="w-full mb-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all">
+          <i class="fas fa-crown"></i>
+          <span>Mejorar Plan (Pro)</span>
+        </button>
+
+        <a routerLink="/config" (click)="isSidebarOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+          <i class="fas fa-cog w-5 text-center"></i>
+          <span>Configuración</span>
+        </a>
+
+        <!-- Theme Toggle -->
+        <button (click)="themeService.toggleTheme()"
+          class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+          <div class="flex items-center gap-3">
+            <i class="w-5 text-center" [ngClass]="themeService.darkMode() ? 'fas fa-moon' : 'fas fa-sun'"></i>
+            <span>Tema</span>
+          </div>
+          <span
+            class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">
+            {{ themeService.darkMode() ? 'Oscuro' : 'Claro' }}
+          </span>
+        </button>
+        <button (click)="logout()"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-colors">
+          <i class="fas fa-sign-out-alt w-5 text-center"></i>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+    <!-- Mobile Header Bar -->
+    <div
+      class="md:hidden flex h-[88px] items-center justify-between bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 transition-colors duration-300 z-30 relative">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">L</div>
+        <span class="font-bold text-slate-900 dark:text-white">LexIA</span>
+      </div>
+      <button (click)="isSidebarOpen = true"
+        class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+        <i class="fas fa-bars w-6 h-6 flex items-center justify-center text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Desktop Top Header -->
+    <header
+      class="hidden md:flex h-[88px] items-center justify-between px-8 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 z-30">
+
+      <!-- Left side: Breadcrumb or Greeting -->
+      <div class="flex items-center gap-2 text-sm">
+
+      </div>
+
+      <!-- Right side: Actions & Profile -->
+      <div class="flex items-center gap-6">
+
+        <!-- Upgrade Button -->
+        <button *ngIf="user?.plan === 'Gratuito'" (click)="authService.pricingModalOpen$.next(true)"
+          class="hidden lg:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all">
+          <i class="fas fa-crown"></i>
+          <span>Mejorar Plan</span>
+        </button>
+
+        <!-- Help Link -->
+        <a href="#"
+          class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+          <i class="fas fa-question-circle text-lg"></i>
+        </a>
+
+        <!-- Notifications Dropdown (Trigger) -->
+        <button
+          class="relative text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+          <i class="fas fa-bell text-lg"></i>
+          <span
+            class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+        </button>
+
+        <!-- Separator -->
+        <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <!-- User Profile -->
+        <div class="flex items-center gap-3 cursor-pointer group" (click)="authService.pricingModalOpen$.next(true)" title="Ver Planes">
+          <div class="text-right hidden xl:block">
+            <p class="text-sm font-semibold text-slate-800 dark:text-white leading-tight">{{ user?.name || 'Usuario' }}
+            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Plan {{ user?.plan || 'Gratuito' }}</p>
+          </div>
+          <div
+            class="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg flex items-center justify-center font-bold shadow-sm group-hover:ring-2 ring-blue-500/50 transition-all">
+            {{ user?.name ? user.name.charAt(0).toUpperCase() : 'U' }}
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Outlet for Pages -->
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Pricing Modal -->
+  <div *ngIf="isPricingModalOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in transition-colors duration-300">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-8">
+      
+      <!-- Close Button -->
+      <button (click)="authService.pricingModalOpen$.next(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 z-10 transition-colors">
+        <i class="fas fa-times w-6 h-6 flex justify-center items-center text-xl"></i>
+      </button>
+
+      <!-- Left Column: Current Plan & Value Prop -->
+      <div class="flex-1 md:border-r border-slate-200 dark:border-slate-800 pr-0 md:pr-8">
+        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center mb-6">
+          <i class="fas fa-crown text-2xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Desbloquea el poder total de LexIA</h3>
+        <p class="text-slate-600 dark:text-slate-400 mb-8">Genera contratos ilimitados, utiliza el análisis avanzado con IA y potencia tu productividad legal sin límites.</p>
+        
+        <div class="bg-slate-50 dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Plan Actual</p>
+          <div class="flex items-center gap-3">
+            <h4 class="text-xl font-bold text-slate-900 dark:text-white">{{ user?.plan || 'Gratuito' }}</h4>
+            <span class="px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+              {{ user?.plan === 'Estudio' ? 'Máximo' : user?.plan === 'Pro' ? 'Avanzado' : 'Básico' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Plans -->
+      <div class="flex-[1.5] flex flex-col sm:flex-row gap-4 pt-4 md:pt-0">
+        
+        <!-- Pro Plan -->
+        <div class="flex-1 p-5 rounded-2xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-900/10 relative shadow-lg shadow-amber-500/10">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+            Recomendado
+          </div>
+          <div class="mb-4 text-center mt-2">
+            <h5 class="font-bold text-lg text-slate-900 dark:text-white">Plan Pro</h5>
+            <div class="mt-2 flex items-baseline justify-center gap-1">
+              <span class="font-bold text-3xl text-slate-900 dark:text-white">S/ 49</span>
+              <span class="text-sm text-slate-500 dark:text-slate-400">/mes</span>
+            </div>
+          </div>
+          <ul class="space-y-3 mb-6">
+            <li class="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <i class="fas fa-check text-amber-500 mt-1 flex-shrink-0"></i> Contratos ilimitados
+            </li>
+            <li class="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <i class="fas fa-check text-amber-500 mt-1 flex-shrink-0"></i> Análisis avanzado IA
+            </li>
+            <li class="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <i class="fas fa-check text-amber-500 mt-1 flex-shrink-0"></i> Descargas PDF/Word
+            </li>
+          </ul>
+          <button (click)="handleUpgradeClick('Pro', 49)" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            Actualizar a Pro
+          </button>
+        </div>
+
+        <!-- Studio Plan -->
+        <div class="flex-1 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors">
+          <div class="mb-4 text-center mt-2">
+            <h5 class="font-bold text-lg text-slate-900 dark:text-white">Plan Estudio</h5>
+            <div class="mt-2 flex items-baseline justify-center gap-1">
+              <span class="font-bold text-2xl text-slate-900 dark:text-white">S/ 299</span>
+              <span class="text-sm text-slate-500 dark:text-slate-400">/mes</span>
+            </div>
+          </div>
+          <ul class="space-y-3 mb-6">
+            <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <i class="fas fa-check text-indigo-500 mt-1 flex-shrink-0"></i> Todo lo del plan Pro
+            </li>
+            <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <i class="fas fa-check text-indigo-500 mt-1 flex-shrink-0"></i> Hasta 10 miembros
+            </li>
+            <li class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <i class="fas fa-check text-indigo-500 mt-1 flex-shrink-0"></i> Soporte prioritario 24/7
+            </li>
+          </ul>
+          <button (click)="handleUpgradeClick('Estudio', 299)" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+            Actualizar a Estudio
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-wrapper, .contract-page, .contract-page * {
+    visibility: visible;
+  }
+  .print-hidden {
+    display: none !important;
+  }
+  .contract-page {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: black !important;
+    background: white !important;
+  }
+}
+
+.contract-page {
+  min-height: 297mm; /* A4 height */
+  font-family: 'Times New Roman', Times, serif;
+  line-height: 1.6;
+}
+.contract-page h2 {
+  font-size: 24px;
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+.contract-page h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.contract-page p {
+  margin-bottom: 15px;
+  text-align: justify;
+}

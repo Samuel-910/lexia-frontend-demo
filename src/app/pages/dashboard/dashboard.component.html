@@ -1,0 +1,131 @@
+<div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 h-full relative transition-colors duration-300">
+  <header class="px-8 h-[88px] flex justify-between items-center sticky top-0 z-10 transition-colors duration-300">
+    <div class="flex flex-col justify-center">
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+        <ng-container *ngIf="loading">Cargando...</ng-container>
+        <ng-container *ngIf="!loading">¡Hola, {{ summary?.userName }}!</ng-container>
+      </h2>
+      <p class="text-slate-500 dark:text-slate-400 text-sm capitalize">{{ currentDate }}</p>
+    </div>
+  </header>
+  <div *ngIf="!loading" class="p-8 w-full space-y-8 pb-20">
+    <!-- Plan Summary -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-300">
+      <div class="flex items-center gap-4">
+        <div [class]="'w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold ' + (summary?.planType === 'free' ? 'bg-slate-800 dark:bg-slate-700' : 'bg-gradient-to-r from-blue-600 to-indigo-600')">
+          {{ summary?.planType === 'free' ? 'F' : 'P' }}
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-900 dark:text-white">Resumen de tu plan</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">
+            <ng-container *ngIf="summary?.planType === 'free'">
+              Te quedan {{ (summary.contractsLimit - summary.contractsUsed) > 0 ? (summary.contractsLimit - summary.contractsUsed) : 0 }} de {{ summary.contractsLimit }} contratos este mes.
+            </ng-container>
+            <ng-container *ngIf="summary?.planType !== 'free'">
+              Plan activo sin límites.
+            </ng-container>
+          </p>
+        </div>
+      </div>
+      <button *ngIf="summary?.planType === 'free'" (click)="authService.pricingModalOpen$.next(true)" class="px-4 py-2 bg-blue-50 text-blue-600 font-semibold rounded-lg hover:bg-blue-100 transition-colors whitespace-nowrap">
+        Actualizar a Pro
+      </button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">¿Qué necesitas hacer hoy?</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div (click)="handleCreateContract()" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-500 cursor-pointer transition-all group">
+          <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <i class="fas fa-file-contract text-lg"></i>
+          </div>
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1">Generar contrato</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">A medida y en segundos.</p>
+        </div>
+
+        <div routerLink="/chat" [queryParams]="{mode: 'consulta'}" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 cursor-pointer transition-all group">
+          <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <i class="fas fa-comments text-lg"></i>
+          </div>
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1">Hacer consulta</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Resuelve dudas legales.</p>
+        </div>
+
+        <div routerLink="/analizar" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-amber-200 dark:hover:border-amber-500 cursor-pointer transition-all group">
+          <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <i class="fas fa-search text-lg"></i>
+          </div>
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1">Analizar contrato</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Detecta riesgos y vacíos.</p>
+        </div>
+
+        <div routerLink="/constituir" class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-500 cursor-pointer transition-all group">
+          <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <i class="fas fa-building text-lg"></i>
+          </div>
+          <h4 class="font-bold text-slate-900 dark:text-white mb-1">Constituir empresa</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Flujo paso a paso.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Recent Documents -->
+    <div>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Documentos recientes</h3>
+        <button routerLink="/documentos" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1">
+          Ver todos <i class="fas fa-arrow-right text-xs"></i>
+        </button>
+      </div>
+      
+      <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors duration-300">
+        <div *ngIf="!summary?.recentDocuments || summary.recentDocuments.length === 0" class="p-8 text-center text-slate-500 dark:text-slate-400">
+          <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-file-alt text-2xl text-slate-300 dark:text-slate-500"></i>
+          </div>
+          <p>Aún no has generado ningún documento.</p>
+        </div>
+        
+        <ul *ngIf="summary?.recentDocuments?.length > 0" class="divide-y divide-slate-100 dark:divide-slate-700">
+          <li *ngFor="let doc of summary.recentDocuments" class="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex items-center justify-between cursor-pointer" routerLink="/documentos">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-slate-900 dark:text-white text-sm">{{ doc.name }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ doc.type }} • {{ doc.createdAt | date }}</p>
+              </div>
+            </div>
+            <button class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">Abrir</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Limit Modal -->
+<div *ngIf="showLimitModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+    <button (click)="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+      <i class="fas fa-times w-5 h-5 flex justify-center items-center"></i>
+    </button>
+    <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-4">
+      <i class="fas fa-exclamation-triangle text-xl"></i>
+    </div>
+    <h3 class="text-xl font-bold text-slate-900 mb-2">Límite alcanzado</h3>
+    <p class="text-slate-600 mb-6">Ya usaste tus {{ summary?.contractsLimit }} contratos gratis de este mes. Actualiza al plan Pro para generar documentos ilimitados y acceder a análisis avanzado.</p>
+    <div class="flex gap-3">
+      <button (click)="closeModal()" class="flex-1 py-2 px-4 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="closeModal(); authService.pricingModalOpen$.next(true)" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+        Ver planes
+      </button>
+    </div>
+  </div>
+</div>

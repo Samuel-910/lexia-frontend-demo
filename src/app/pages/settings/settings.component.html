@@ -1,0 +1,133 @@
+<div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-8 h-full transition-colors duration-300">
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Configuración</h2>
+      <p class="text-slate-500 dark:text-slate-400">Administra tu perfil, facturación y suscripción a LexIA.</p>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row min-h-[600px] transition-colors duration-300">
+      
+      <!-- Sidebar Settings -->
+      <div class="w-full md:w-64 border-r border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 p-4 transition-colors duration-300">
+        <nav class="space-y-1">
+          <button (click)="activeTab = 'perfil'" [class]="'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ' + (activeTab === 'perfil' ? 'bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')">
+            <i class="fas fa-user w-4 text-center"></i> Perfil
+          </button>
+          <button (click)="activeTab = 'plan'" [class]="'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ' + (activeTab === 'plan' ? 'bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')">
+            <i class="fas fa-shield-alt w-4 text-center"></i> Plan y Suscripción
+          </button>
+          <button (click)="activeTab = 'facturacion'" [class]="'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ' + (activeTab === 'facturacion' ? 'bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700')">
+            <i class="fas fa-credit-card w-4 text-center"></i> Facturación
+          </button>
+        </nav>
+      </div>
+
+      <!-- Content Settings -->
+      <div class="flex-1 p-4 md:p-8">
+        
+        <div *ngIf="activeTab === 'perfil'" class="max-w-md animate-in fade-in">
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Información Personal</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre</label>
+              <input type="text" [(ngModel)]="nameInput" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Correo electrónico</label>
+              <input type="email" disabled [value]="user?.email" class="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg outline-none cursor-not-allowed transition-colors" />
+            </div>
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-700 mt-6 transition-colors">
+              <button (click)="saveProfile()" class="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors">Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="activeTab === 'plan'" class="animate-in fade-in">
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Tu Suscripción Actual</h3>
+          
+          <div class="bg-slate-900 dark:bg-slate-950 text-white p-6 rounded-2xl mb-8 relative overflow-hidden transition-colors border border-transparent dark:border-slate-700">
+            <div class="absolute right-0 top-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/4"></div>
+            <div class="relative z-10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div>
+                <p class="text-blue-300 dark:text-blue-400 text-sm font-medium mb-1">Plan Actual</p>
+                <h4 class="text-3xl font-bold capitalize mb-2">{{ user?.plan || 'Gratuito' }}</h4>
+                <p class="text-slate-400 text-sm">
+                  {{ user?.plan !== 'Gratuito' ? 'Disfrutando de beneficios ilimitados.' : 'Has usado contratos de tu límite este mes.' }}
+                </p>
+              </div>
+              <div class="sm:text-right" *ngIf="user?.plan !== 'Estudio'">
+                <button (click)="handleUpgradeClick('Pro', 49)" *ngIf="user?.plan === 'Gratuito'" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-colors whitespace-nowrap">
+                  Mejorar a Pro
+                </button>
+                <button (click)="handleUpgradeClick('Estudio', 299)" *ngIf="user?.plan === 'Pro'" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition-colors whitespace-nowrap">
+                  Subir a Estudio
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <h4 class="font-bold text-slate-900 dark:text-white mb-4">Planes disponibles</h4>
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Pro Card -->
+            <div class="p-6 rounded-2xl border-2 transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-500">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h5 class="font-bold text-lg text-slate-900 dark:text-white">Plan Pro</h5>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Para independientes</p>
+                </div>
+                <div class="text-right">
+                  <span class="font-bold text-xl text-slate-900 dark:text-white">S/ 49</span><span class="text-sm text-slate-500 dark:text-slate-400">/mes</span>
+                </div>
+              </div>
+              <ul class="space-y-2 mb-6">
+                <li class="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><i class="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i> Contratos ilimitados</li>
+                <li class="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><i class="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i> Análisis IA</li>
+              </ul>
+              <button (click)="handleUpgradeClick('Pro', 49)" class="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors">Actualizar</button>
+            </div>
+
+            <!-- Studio Card -->
+            <div class="p-6 rounded-2xl border-2 transition-all border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300 dark:hover:border-indigo-500">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h5 class="font-bold text-lg text-slate-900 dark:text-white">Plan Estudio</h5>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Para equipos</p>
+                </div>
+                <div class="text-right">
+                  <span class="font-bold text-xl text-slate-900 dark:text-white">S/ 299</span><span class="text-sm text-slate-500 dark:text-slate-400">/mes</span>
+                </div>
+              </div>
+              <ul class="space-y-2 mb-6">
+                <li class="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><i class="fas fa-check-circle text-indigo-500 dark:text-indigo-400"></i> Todo en Pro</li>
+                <li class="flex gap-2 text-sm text-slate-600 dark:text-slate-300"><i class="fas fa-check-circle text-indigo-500 dark:text-indigo-400"></i> 10 Miembros de equipo</li>
+              </ul>
+              <button (click)="handleUpgradeClick('Estudio', 299)" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-colors">Actualizar a Estudio</button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="activeTab === 'facturacion'" class="max-w-md animate-in fade-in">
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Datos de Facturación</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">RUC</label>
+              <input type="text" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="10... o 20..." />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Razón Social</label>
+              <input type="text" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors" placeholder="Mi Empresa S.A.C." />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección (Opcional)</label>
+              <input type="text" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors" />
+            </div>
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-700 mt-6 transition-colors">
+              <button (click)="saveProfile()" class="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors">Actualizar datos</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

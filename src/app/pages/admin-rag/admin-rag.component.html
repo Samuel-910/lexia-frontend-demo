@@ -1,0 +1,322 @@
+<div class="flex-1 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-8 transition-colors duration-300">
+  <div class="w-full max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+      <div>
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+          <i class="fas fa-gavel text-blue-600 dark:text-blue-500"></i>
+          Base de Conocimiento RAG (Administrador)
+        </h2>
+        <p class="text-slate-500 dark:text-slate-400">
+          Gestiona las leyes peruanas y documentos legales oficiales que fundamentan las respuestas de LexIA.
+        </p>
+      </div>
+    </div>
+
+    <!-- Main Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Left side: Upload & Document List (8 cols on large screen) -->
+      <div class="lg:col-span-7 space-y-8">
+        
+        <!-- File Upload Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 transition-all">
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-file-upload text-blue-500"></i>
+            Indexar Leyes o Documentos
+          </h3>
+          
+          <!-- Drag & Drop Zone (Always visible to allow queueing more files) -->
+          <div 
+            class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 mb-6"
+            [ngClass]="{
+              'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20': dragOver,
+              'border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500': !dragOver
+            }"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            (click)="fileInput.click()"
+            [class.opacity-50]="uploading"
+            [class.pointer-events-none]="uploading"
+          >
+            <input 
+              type="file" 
+              #fileInput 
+              class="hidden" 
+              accept=".txt,.pdf,.docx" 
+              multiple
+              (change)="onFileSelected($event)"
+            />
+            <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fas fa-cloud-upload-alt text-xl"></i>
+            </div>
+            <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1 text-sm">
+              Arrastra tus archivos aquí o haz clic para explorar
+            </p>
+            <p class="text-xs text-slate-400 dark:text-slate-500">
+              Formatos admitidos: .pdf, .docx, .txt (Máx. 10MB c/u)
+            </p>
+          </div>
+
+          <!-- Queue List View -->
+          <div *ngIf="uploadQueue.length > 0" class="space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2">
+              <h4 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Cola de Carga ({{ uploadQueue.length }})
+              </h4>
+              <button 
+                (click)="clearQueue()" 
+                [disabled]="uploading"
+                class="text-xs text-red-500 hover:text-red-600 font-semibold disabled:opacity-50"
+              >
+                Limpiar lista
+              </button>
+            </div>
+
+            <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div 
+                *ngFor="let item of uploadQueue; let idx = index" 
+                class="border rounded-xl p-3 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 transition-all"
+                [ngClass]="{
+                  'border-slate-200 dark:border-slate-800': item.status === 'pending',
+                  'border-blue-400 dark:border-blue-900': item.status === 'uploading',
+                  'border-emerald-400 dark:border-emerald-900': item.status === 'success',
+                  'border-red-400 dark:border-red-900': item.status === 'error'
+                }"
+              >
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm flex-shrink-0">
+                    <i class="fas" [class.fa-file-pdf]="item.file.name.endsWith('.pdf')" [class.fa-file-word]="item.file.name.endsWith('.docx')" [class.fa-file-alt]="item.file.name.endsWith('.txt')"></i>
+                  </div>
+                  <div class="min-w-0 flex-1 pr-2">
+                    <p class="font-medium text-slate-800 dark:text-slate-200 text-xs truncate" [title]="item.file.name">
+                      {{ item.file.name }}
+                    </p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500">
+                      {{ (item.file.size / 1024).toFixed(1) }} KB
+                    </p>
+                    <p *ngIf="item.status === 'success' && item.articlesCount" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+                      <i class="fas fa-magic text-[9px] mr-1"></i> Se detectaron {{ item.articlesCount }} artículos. Tiempo estimado: ~{{ item.estimatedTimeSeconds }} segundos.
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-3 flex-shrink-0">
+                  <!-- Badges -->
+                  <span *ngIf="item.status === 'pending'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    Listo
+                  </span>
+                  <span *ngIf="item.status === 'uploading'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                    <i class="fas fa-spinner fa-spin text-[9px]"></i> Indexando
+                  </span>
+                  <span *ngIf="item.status === 'success'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                    <i class="fas fa-check-circle text-[9px]"></i> Éxito
+                  </span>
+                  <span *ngIf="item.status === 'error'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300" [title]="item.errorMsg || 'Fallo'">
+                    <i class="fas fa-exclamation-circle text-[9px]"></i> Falló
+                  </span>
+
+                  <!-- Actions -->
+                  <button 
+                    *ngIf="item.status !== 'success'"
+                    (click)="removeFromQueue(idx)" 
+                    [disabled]="uploading"
+                    class="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded transition-colors disabled:opacity-30"
+                    title="Quitar"
+                  >
+                    <i class="fas fa-times text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload Action Button -->
+            <div class="flex justify-end gap-3 mt-4">
+              <button 
+                (click)="uploadAllFiles()" 
+                [disabled]="uploading || uploadQueue.length === 0"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-blue-600/10 disabled:opacity-50 flex items-center gap-2 text-sm"
+              >
+                <i class="fas fa-spinner fa-spin" *ngIf="uploading"></i>
+                <i class="fas fa-file-medical" *ngIf="!uploading"></i>
+                {{ uploading ? 'Indexando cola...' : 'Indexar Todos los Archivos' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document List Table Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <i class="fas fa-database text-blue-500"></i>
+              Base de Datos de Conocimiento ({{ documents.length }})
+            </h3>
+            <button 
+              (click)="loadDocuments()" 
+              [disabled]="loadingDocs" 
+              class="p-2 text-slate-500 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-all"
+              title="Refrescar lista"
+            >
+              <i class="fas fa-sync-alt" [class.fa-spin]="loadingDocs"></i>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[500px]">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                  <th class="px-6 py-4 font-medium">Nombre de Ley / Documento</th>
+                  <th class="px-6 py-4 font-medium">Estado</th>
+                  <th class="px-6 py-4 font-medium">Indexado / Actualizado</th>
+                  <th class="px-6 py-4 font-medium text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <tr *ngIf="loadingDocs && documents.length === 0">
+                  <td colspan="4" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i>
+                    <p class="text-sm">Obteniendo base de datos del RAG...</p>
+                  </td>
+                </tr>
+                <tr *ngIf="!loadingDocs && documents.length === 0">
+                  <td colspan="4" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i class="fas fa-gavel text-2xl text-slate-300 dark:text-slate-500"></i>
+                    </div>
+                    <p class="font-medium text-slate-700 dark:text-slate-300 text-sm">Base de conocimiento vacía</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Sube tus primeros archivos legales en la zona superior.</p>
+                  </td>
+                </tr>
+                
+                <tr *ngFor="let doc of documents" class="hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors group">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 text-sm">
+                        <i class="fas" [class.fa-file-pdf]="doc.endsWith('.pdf')" [class.fa-file-word]="doc.endsWith('.docx')" [class.fa-file-alt]="!doc.endsWith('.pdf') && !doc.endsWith('.docx')"></i>
+                      </div>
+                      <span class="font-medium text-slate-800 dark:text-white text-sm truncate max-w-[200px] md:max-w-xs" [title]="doc">{{ doc }}</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Indexado
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    {{ documentUpdates[doc] || 'Pendiente' }}
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <button 
+                      (click)="deleteDocument(doc)"
+                      class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                      title="Eliminar de RAG"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side: Interactive RAG Tester (5 cols on large screen) -->
+      <div class="lg:col-span-5">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-[600px] sticky top-8">
+          <div class="border-b border-slate-200 dark:border-slate-700 pb-4 mb-4">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <i class="fas fa-flask text-indigo-500"></i>
+              Consola de Prueba RAG
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Prueba consultas en tiempo real para verificar qué responde la IA utilizando el conocimiento cargado.
+            </p>
+          </div>
+
+          <!-- Query Controls -->
+          <div class="space-y-4 mb-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Pregunta al RAG</label>
+              <div class="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Ej. ¿Cuántos socios se necesitan para una SAC?" 
+                  [(ngModel)]="queryText"
+                  (keyup.enter)="testQuery()"
+                  [disabled]="querying"
+                  class="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white disabled:opacity-50"
+                />
+                <button 
+                  (click)="testQuery()" 
+                  [disabled]="querying || !queryText.trim()"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-sm transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                >
+                  <i class="fas fa-paper-plane" *ngIf="!querying"></i>
+                  <i class="fas fa-spinner fa-spin" *ngIf="querying"></i>
+                  Enviar
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span class="flex items-center gap-1">
+                <i class="fas fa-cog"></i> Límite de Fragmentos RAG:
+              </span>
+              <div class="flex items-center gap-1">
+                <button 
+                  [disabled]="queryLimit <= 1 || querying" 
+                  (click)="queryLimit = queryLimit - 1" 
+                  class="w-5 h-5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold disabled:opacity-50"
+                >-</button>
+                <span class="w-6 text-center font-bold font-mono text-slate-800 dark:text-white">{{ queryLimit }}</span>
+                <button 
+                  [disabled]="queryLimit >= 10 || querying" 
+                  (click)="queryLimit = queryLimit + 1" 
+                  class="w-5 h-5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold disabled:opacity-50"
+                >+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Answer Workspace -->
+          <div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+            <!-- Loading state -->
+            <div *ngIf="querying" class="h-full flex flex-col items-center justify-center text-slate-400">
+              <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mb-3"></i>
+              <p class="text-sm font-medium">Buscando fuentes y redactando...</p>
+              <p class="text-xs text-slate-400 mt-1">Esto puede demorar unos segundos debido a la IA local.</p>
+            </div>
+
+            <!-- Empty state -->
+            <div *ngIf="!querying && !ragAnswer" class="h-full flex flex-col items-center justify-center text-slate-400 text-center">
+              <i class="fas fa-comments text-4xl mb-3 text-slate-300 dark:text-slate-700"></i>
+              <p class="text-sm font-semibold">Consola Lista</p>
+              <p class="text-xs max-w-xs mt-1">Haz una pregunta legal para ver cómo la IA utiliza las leyes indexadas para redactar su respuesta.</p>
+            </div>
+
+            <!-- Result -->
+            <div *ngIf="!querying && ragAnswer" class="space-y-4">
+              <div class="flex gap-2 items-start">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">
+                  L
+                </div>
+                <div class="space-y-2">
+                  <p class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Respuesta Fundamentada de LexIA</p>
+                  <div class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white dark:bg-slate-950 p-4 rounded-xl border dark:border-slate-850 shadow-sm whitespace-pre-line">
+                    {{ ragAnswer }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

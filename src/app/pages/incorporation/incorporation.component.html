@@ -1,0 +1,183 @@
+<div class="flex-1 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-8 transition-colors duration-300 print-wrapper relative">
+  
+  <!-- Encabezado -->
+  <div class="w-full max-w-4xl mx-auto mb-8 print-hidden">
+    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Constitución de Empresas</h2>
+    <p class="text-slate-500 dark:text-slate-400">Sigue este asistente paso a paso para generar la Minuta de Constitución de tu nueva empresa.</p>
+    
+    <!-- Barra de progreso -->
+    <div *ngIf="step < 4" class="mt-8 flex items-center justify-between relative">
+      <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full z-0"></div>
+      <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-500 rounded-full z-0 transition-all duration-500" [style.width]="((step-1)/2)*100 + '%'"></div>
+      
+      <div class="relative z-10 flex flex-col items-center">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300" [ngClass]="step >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'">1</div>
+        <span class="text-xs font-semibold mt-2" [ngClass]="step >= 1 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'">Tipo</span>
+      </div>
+      <div class="relative z-10 flex flex-col items-center">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300" [ngClass]="step >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'">2</div>
+        <span class="text-xs font-semibold mt-2" [ngClass]="step >= 2 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'">Datos</span>
+      </div>
+      <div class="relative z-10 flex flex-col items-center">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300" [ngClass]="step >= 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'">3</div>
+        <span class="text-xs font-semibold mt-2" [ngClass]="step >= 3 ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'">Socios</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full max-w-4xl mx-auto">
+    
+    <!-- PASO 1: TIPO DE SOCIEDAD -->
+    <div *ngIf="step === 1" class="print-hidden">
+      <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Paso 1: Elige el tipo de empresa</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div *ngFor="let type of companyTypes" 
+             (click)="selectType(type.id)"
+             class="bg-white dark:bg-slate-800 p-6 rounded-3xl border-2 cursor-pointer group transition-all duration-300 flex flex-col h-full"
+             [ngClass]="formData.tipoSociedad === type.id ? 'border-blue-500 shadow-md scale-[1.02]' : 'border-transparent shadow-sm hover:border-slate-300 dark:hover:border-slate-600'">
+          
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110" [ngClass]="type.color">
+            <i [class]="type.icon + ' text-2xl'"></i>
+          </div>
+          
+          <h4 class="text-2xl font-bold text-slate-900 dark:text-white mb-1">{{ type.title }}</h4>
+          <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3">{{ type.subtitle }}</p>
+          <p class="text-slate-500 dark:text-slate-400 text-sm flex-grow">{{ type.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2: DATOS DE LA EMPRESA -->
+    <div *ngIf="step === 2" class="print-hidden">
+      <button (click)="goBack(1)" class="mb-6 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i> Atrás
+      </button>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Paso 2: Datos Generales de la {{ formData.tipoSociedad }}</h3>
+        
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Razón Social (Nombre de la empresa)</label>
+            <input type="text" [(ngModel)]="formData.razonSocial" placeholder="Ej. Mi Emprendimiento Genial S.A.C." 
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Objeto Social (¿A qué se dedicará?)</label>
+            <textarea [(ngModel)]="formData.objetoSocial" rows="3" placeholder="Ej. Venta de ropa deportiva, accesorios, consultoría comercial y afines..."
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all resize-none"></textarea>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Domicilio (Ciudad / Distrito)</label>
+            <input type="text" [(ngModel)]="formData.domicilio" placeholder="Ej. Lima, Miraflores" 
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all">
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+          <button (click)="goToStep3()" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-md">
+            Continuar <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 3: SOCIOS Y CAPITAL -->
+    <div *ngIf="step === 3" class="print-hidden">
+      <button (click)="goBack(2)" class="mb-6 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center gap-2">
+        <i class="fas fa-arrow-left"></i> Atrás
+      </button>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-slate-100 dark:border-slate-700/50">
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Paso 3: Capital y Socios</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">Define el capital inicial y agrega a los titulares o accionistas.</p>
+        </div>
+
+        <div class="p-8 space-y-8">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Capital Social Total</label>
+            <input type="text" [(ngModel)]="formData.capitalSocial" placeholder="Ej. S/ 5,000.00 en efectivo" 
+              class="w-full md:w-1/2 px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all">
+          </div>
+
+          <div class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-4">Añadir Socio/Titular</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <input type="text" [(ngModel)]="newSocio.nombre" placeholder="Nombre completo" class="px-4 py-2 border rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+              <input type="text" [(ngModel)]="newSocio.dni" placeholder="DNI / CE" class="px-4 py-2 border rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+              <input type="text" [(ngModel)]="newSocio.aporte" placeholder="Aporte (Ej. S/ 2000)" class="px-4 py-2 border rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+            </div>
+            <button (click)="addSocio()" class="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-sm font-bold hover:bg-slate-900 dark:hover:bg-slate-600 transition-colors">
+              + Añadir a la lista
+            </button>
+          </div>
+
+          <!-- Lista de Socios -->
+          <div *ngIf="formData.sociosData.length > 0">
+            <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-3">Socios Registrados ({{formData.sociosData.length}})</h4>
+            <ul class="space-y-3">
+              <li *ngFor="let s of formData.sociosData; let i = index" class="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                <div>
+                  <span class="font-bold text-blue-900 dark:text-blue-100">{{ s.nombre }}</span>
+                  <span class="text-blue-600 dark:text-blue-400 text-sm ml-2">(DNI: {{ s.dni }})</span>
+                  <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">Aporte: {{ s.aporte }}</p>
+                </div>
+                <button (click)="removeSocio(i)" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Instrucciones extra -->
+          <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Instrucciones Especiales para los Estatutos (Opcional)</label>
+            <textarea [(ngModel)]="formData.clausulasExtras" rows="2" placeholder="Ej. El gerente general será Juan Pérez..."
+              class="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all resize-none"></textarea>
+          </div>
+
+          <div class="mt-10 flex justify-end">
+            <button (click)="generateMinute()" class="px-8 py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg hover:bg-emerald-700 transition-all flex items-center gap-3 shadow-lg shadow-emerald-600/20">
+              <i class="fas fa-magic"></i> Generar Minuta
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 4: RESULTADO WOW -->
+    <div *ngIf="step === 4" class="flex flex-col items-center">
+      <!-- Cargando... -->
+      <div *ngIf="isGenerating" class="flex flex-col items-center justify-center py-20 print-hidden">
+        <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center mb-6 animate-pulse">
+          <i class="fas fa-building text-4xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Redactando Minuta de Constitución...</h3>
+        <p class="text-slate-500 dark:text-slate-400 animate-pulse text-center max-w-sm">LexIA está estructurando el pacto social, los estatutos y formateando el documento legal.</p>
+      </div>
+
+      <!-- Minuta Lista -->
+      <div *ngIf="!isGenerating" class="w-full max-w-3xl">
+        <div class="flex justify-between items-center mb-6 print-hidden">
+          <button (click)="goBack(1)" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center gap-2 transition-colors">
+            <i class="fas fa-arrow-left"></i> Crear otra
+          </button>
+          
+          <div class="flex gap-3">
+            <button (click)="exportWord()" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2">
+              <i class="fas fa-file-word"></i> Descargar Word
+            </button>
+            <button (click)="printPDF()" class="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all shadow-md flex items-center gap-2">
+              <i class="fas fa-file-pdf"></i> Guardar como PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white text-black p-10 md:p-16 rounded-sm shadow-2xl mx-auto contract-page" [innerHTML]="generatedContent">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

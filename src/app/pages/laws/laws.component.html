@@ -1,0 +1,194 @@
+<div class="flex-1 flex flex-col min-h-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+
+  <!-- Header Section -->
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-10 shadow-md flex-shrink-0 relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+    <div class="absolute right-20 top-2 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+      <div>
+        <span class="text-blue-100 text-xs font-semibold uppercase tracking-wider px-2.5 py-1 bg-white/10 rounded-full">Legislación Oficial</span>
+        <h2 class="text-3xl font-extrabold mt-2 tracking-tight">Biblioteca Legal de LexIA</h2>
+        <p class="text-blue-100 text-sm mt-1 max-w-xl">
+          Explora la legislación peruana indexada y estructurada en el cerebro de nuestra Inteligencia Artificial.
+        </p>
+      </div>
+      <!-- Search Input -->
+      <div class="relative w-full md:max-w-md">
+        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-200">
+          <i class="fas fa-search"></i>
+        </span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (ngModelChange)="filterDocuments()"
+          placeholder="Buscar ley por título o categoría..." 
+          class="w-full pl-10 pr-4 py-3 bg-white/10 hover:bg-white/15 focus:bg-white text-white placeholder-blue-200 focus:placeholder-slate-400 focus:text-slate-900 border border-white/20 focus:border-white rounded-xl shadow-inner outline-none transition-all duration-300"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Body -->
+  <div class="flex-1 overflow-y-auto px-8 py-8 min-h-0">
+    <div class="max-w-7xl mx-auto h-full">
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="flex flex-col items-center justify-center py-20">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-slate-500 dark:text-slate-400 mt-4 text-sm font-medium">Cargando biblioteca de leyes...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && filteredDocuments.length === 0" class="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-600 mb-4">
+          <i class="fas fa-folder-open text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 dark:text-white">No se encontraron leyes</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-xs">No hay leyes cargadas en la biblioteca que coincidan con tu criterio de búsqueda.</p>
+      </div>
+
+      <!-- Laws Grid -->
+      <div *ngIf="!loading && filteredDocuments.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div 
+          *ngFor="let doc of filteredDocuments" 
+          (click)="selectLaw(doc)"
+          class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-700 rounded-2xl p-6 shadow-sm hover:shadow-md cursor-pointer transform hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
+        >
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30">
+                {{ getDocCategory(doc) }}
+              </span>
+              <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-colors">
+                <i [class]="getDocIcon(doc)"></i>
+              </div>
+            </div>
+            
+            <h3 class="text-base font-bold text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-450 line-clamp-2 leading-snug transition-colors duration-200">
+              {{ getDocTitle(doc) }}
+            </h3>
+            
+            <p class="text-slate-500 dark:text-slate-400 text-xs mt-2.5 line-clamp-3 leading-relaxed">
+              {{ getDocDesc(doc) }}
+            </p>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-900 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+            <span class="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
+              Ver estructura <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+            </span>
+            <span class="text-slate-350 dark:text-slate-600 font-mono text-[10px]">{{ doc }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Detail Slide-over / Side Panel -->
+  <div 
+    *ngIf="selectedLaw" 
+    class="fixed inset-0 z-50 flex justify-end bg-slate-900/50 backdrop-blur-sm transition-opacity animate-in fade-in"
+    (click)="closeLawView()"
+  >
+    <div 
+      class="w-full max-w-3xl bg-white dark:bg-slate-950 h-full shadow-2xl flex flex-col relative animate-in slide-in-from-right duration-300"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Slide-over Header -->
+      <div class="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
+            {{ getDocCategory(selectedLaw) }}
+          </span>
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mt-2 leading-snug truncate">
+            {{ getDocTitle(selectedLaw) }}
+          </h3>
+          <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-1">{{ selectedLaw }}</p>
+        </div>
+        <button 
+          (click)="closeLawView()" 
+          class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition-colors"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Slide-over Sub-header (Search within document) -->
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-between gap-4">
+        <app-search-generic 
+          [options]="searchOptions"
+          [placeholder]="'Filtrar por artículo o texto...'"
+          (onSearch)="onArticleSearch($event)"
+          class="flex-1"
+        ></app-search-generic>
+        <span class="text-xs text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+          {{ filteredStructure.length }} artículos
+        </span>
+      </div>
+
+      <!-- Slide-over Body -->
+      <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-900/20">
+        
+        <!-- Loading Structure State -->
+        <div *ngIf="loadingStructure" class="flex flex-col items-center justify-center py-20">
+          <div class="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-slate-400 text-xs mt-3">Cargando la estructura de la ley...</p>
+        </div>
+
+        <!-- No Items Found State -->
+        <div *ngIf="!loadingStructure && filteredStructure.length === 0" class="text-center py-12">
+          <p class="text-slate-400 text-sm">No se encontraron artículos que coincidan con la búsqueda.</p>
+        </div>
+
+        <!-- Articles Accordion -->
+        <div *ngIf="!loadingStructure && pagedStructure.length > 0" class="space-y-4">
+          <div 
+            *ngFor="let item of pagedStructure"
+            class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm"
+          >
+            <!-- Article Header -->
+            <button 
+              (click)="toggleArticle(item)"
+              class="w-full px-5 py-4 flex items-center justify-between gap-3 text-left font-bold text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+            >
+              <div class="flex items-center gap-2.5">
+                <i class="fas fa-paragraph text-blue-500 text-xs"></i>
+                <span class="text-sm font-bold text-slate-800 dark:text-white">{{ item.section }}</span>
+              </div>
+              <i 
+                class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200"
+                [class.rotate-180]="item.isExpanded"
+              ></i>
+            </button>
+            
+            <!-- Article Content -->
+            <div 
+              *ngIf="item.isExpanded" 
+              class="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-900 animate-in fade-in duration-200"
+            >
+              <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
+                {{ item.content }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <app-pagination 
+            [currentPage]="currentPage"
+            [totalPages]="totalPages"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[10, 20, 50, 100]"
+            [recordsLabel]="'artículos'"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+            class="block border-t border-slate-200 dark:border-slate-800 pt-6 mt-6"
+          ></app-pagination>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,117 @@
+<div class="flex-1 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-8 transition-colors duration-300 print-wrapper relative">
+  
+  <!-- Encabezado general (Oculto al imprimir) -->
+  <div class="w-full max-w-5xl mx-auto mb-8 print-hidden">
+    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Generar Contrato</h2>
+    <p class="text-slate-500 dark:text-slate-400">Selecciona una plantilla, llena los datos y obtén tu contrato legalmente validado en segundos.</p>
+  </div>
+
+  <div class="w-full max-w-5xl mx-auto">
+    <!-- PASO 1: Galería de Plantillas -->
+    <div *ngIf="step === 1" class="print-hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let template of templates" 
+             (click)="selectTemplate(template)"
+             class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer group flex flex-col h-full">
+          
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110" [ngClass]="template.color">
+            <i [class]="template.icon + ' text-2xl'"></i>
+          </div>
+          
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">{{ template.title }}</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm flex-grow">{{ template.description }}</p>
+          
+          <div class="mt-6 flex items-center text-blue-600 dark:text-blue-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+            Usar plantilla <i class="fas fa-arrow-right ml-2"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2: Formulario Inteligente -->
+    <div *ngIf="step === 2" class="print-hidden">
+      <button (click)="goBackToTemplates()" class="mb-6 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center gap-2 transition-colors">
+        <i class="fas fa-arrow-left"></i> Volver a plantillas
+      </button>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" [ngClass]="selectedTemplate.color">
+              <i [class]="selectedTemplate.icon + ' text-xl'"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ selectedTemplate.title }}</h3>
+              <p class="text-slate-500 dark:text-slate-400 text-sm">Completa los datos para generar el documento.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div *ngFor="let field of selectedTemplate.fields" class="space-y-2">
+              <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">{{ field.label }}</label>
+              <input type="text" [(ngModel)]="formData[field.name]" [placeholder]="field.placeholder" 
+                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all">
+            </div>
+          </div>
+
+          <!-- Campo Opcional para la IA -->
+          <div class="mt-8 space-y-2">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <i class="fas fa-robot text-blue-500 mr-2"></i> Cláusulas especiales o instrucciones para la IA (Opcional)
+            </label>
+            <textarea [(ngModel)]="formData.clausulasExtras" rows="3" placeholder="Ej. Agrega una cláusula indicando que no se aceptan mascotas, o que el contrato se puede renovar automáticamente..."
+              class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white transition-all resize-none"></textarea>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">LexIA redactará legalmente estas peticiones y las incluirá en el documento final.</p>
+          </div>
+
+          <div class="mt-10 flex justify-end">
+            <button (click)="generateContract()" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-3">
+              <i class="fas fa-magic"></i> Generar Documento
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 3: Efecto Wow / Resultado (Solo esto se imprime) -->
+    <div *ngIf="step === 3" class="flex flex-col items-center">
+      
+      <!-- Cargando... (No imprimible) -->
+      <div *ngIf="isGenerating" class="flex flex-col items-center justify-center py-20 print-hidden">
+        <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full flex items-center justify-center mb-6 animate-pulse">
+          <i class="fas fa-file-signature text-4xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Redactando contrato...</h3>
+        <p class="text-slate-500 dark:text-slate-400 animate-pulse">Aplicando cláusulas legales y formato.</p>
+      </div>
+
+      <!-- Contrato Listo -->
+      <div *ngIf="!isGenerating" class="w-full max-w-3xl">
+        
+        <!-- Acciones flotantes (No imprimibles) -->
+        <div class="flex justify-between items-center mb-6 print-hidden">
+          <button (click)="goBackToTemplates()" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center gap-2 transition-colors">
+            <i class="fas fa-arrow-left"></i> Crear otro
+          </button>
+          
+          <div class="flex gap-3">
+            <button (click)="exportWord()" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center gap-2">
+              <i class="fas fa-file-word"></i> Descargar Word
+            </button>
+            <button (click)="printPDF()" class="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all shadow-md flex items-center gap-2">
+              <i class="fas fa-file-pdf"></i> Guardar como PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Hoja A4 Visual (ESTO SE IMPRIME) -->
+        <div class="bg-white text-black p-10 md:p-16 rounded-sm shadow-2xl mx-auto contract-page" [innerHTML]="generatedContent">
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,120 @@
+<div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 md:p-8 h-full transition-colors duration-300">
+  <div class="w-full">
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Analizar Contrato (IA)</h2>
+      <p class="text-slate-500 dark:text-slate-400">Sube un contrato en PDF o Word para identificar riesgos ocultos y vacíos legales.</p>
+    </div>
+
+    <div *ngIf="!result" class="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm text-center transition-colors duration-300">
+      <div 
+        class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-12 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer relative"
+      >
+        <input 
+          type="file" 
+          accept=".pdf,.docx" 
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          (change)="handleFileChange($event)"
+        />
+        
+        <div *ngIf="file" class="flex flex-col items-center">
+          <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-4">
+            <i class="fas fa-file-alt text-3xl"></i>
+          </div>
+          <p class="text-lg font-semibold text-slate-900 dark:text-white mb-1">{{ file.name }}</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
+          <button 
+            (click)="file = null"
+            class="text-red-500 text-sm hover:underline relative z-10"
+          >
+            Quitar archivo
+          </button>
+        </div>
+
+        <div *ngIf="!file" class="flex flex-col items-center">
+          <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center mb-4">
+            <i class="fas fa-cloud-upload-alt text-3xl"></i>
+          </div>
+          <p class="text-lg font-semibold text-slate-900 dark:text-white mb-1">Arrastra tu documento aquí</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">o haz clic para explorar. Acepta PDF o DOCX (máx 10 MB).</p>
+          <div class="px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-medium shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            Seleccionar archivo
+          </div>
+        </div>
+      </div>
+      
+
+
+      <div *ngIf="file" class="mt-8">
+        <button 
+          (click)="startAnalysis()"
+          [disabled]="isAnalyzing"
+          class="w-full max-w-md mx-auto flex justify-center items-center gap-2 py-4 px-6 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20"
+        >
+          <ng-container *ngIf="isAnalyzing">
+            <i class="fas fa-spinner fa-spin text-xl"></i> Analizando contrato con IA...
+          </ng-container>
+          <ng-container *ngIf="!isAnalyzing">
+            <i class="fas fa-shield-alt text-xl"></i> Iniciar Análisis Legal
+          </ng-container>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="result" class="space-y-6 pb-12">
+      <!-- Recommendation Card -->
+      <div [class]="'p-6 rounded-2xl border transition-colors duration-300 ' + (result.recommendation.status === 'firmar' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50' : result.recommendation.status === 'negociar' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50')">
+        <div class="flex items-start gap-4">
+          <div [class]="'p-3 rounded-xl flex-shrink-0 ' + (result.recommendation.status === 'firmar' ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400' : result.recommendation.status === 'negociar' ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400' : 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400')">
+            <i [class]="result.recommendation.status === 'firmar' ? 'fas fa-check-circle text-2xl' : 'fas fa-exclamation-triangle text-2xl'"></i>
+          </div>
+          <div>
+            <h3 [class]="'text-lg font-bold mb-1 ' + (result.recommendation.status === 'firmar' ? 'text-emerald-900 dark:text-emerald-100' : result.recommendation.status === 'negociar' ? 'text-amber-900 dark:text-amber-100' : 'text-red-900 dark:text-red-100')">
+              Veredicto LexIA: {{ result.recommendation.status.toUpperCase() }}
+            </h3>
+            <p [class]="'text-sm ' + (result.recommendation.status === 'firmar' ? 'text-emerald-800 dark:text-emerald-200/80' : result.recommendation.status === 'negociar' ? 'text-amber-800 dark:text-amber-200/80' : 'text-red-800 dark:text-red-200/80')">
+              {{ result.recommendation.text }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Risks -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm transition-colors duration-300">
+          <h4 class="flex items-center gap-2 font-bold text-red-600 dark:text-red-400 mb-4 pb-2 border-b border-red-50 dark:border-red-900/20">
+            <i class="fas fa-shield-alt"></i> Riesgos Detectados
+          </h4>
+          <ul class="space-y-3">
+            <li *ngFor="let risk of result.risks" class="flex gap-2 text-slate-700 dark:text-slate-300 text-sm">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5"></span>
+              {{ risk }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Gaps -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm transition-colors duration-300">
+          <h4 class="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400 mb-4 pb-2 border-b border-amber-50 dark:border-amber-900/20">
+            <i class="fas fa-exclamation-triangle"></i> Vacíos Legales
+          </h4>
+          <ul class="space-y-3">
+            <li *ngFor="let gap of result.gaps" class="flex gap-2 text-slate-700 dark:text-slate-300 text-sm">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0 mt-1.5"></span>
+              {{ gap }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-4 mt-8">
+        <button (click)="reset()" class="px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          Analizar otro archivo
+        </button>
+        <button (click)="saveAnalysis()" class="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm">
+          <i class="fas fa-save"></i>
+          Guardar este análisis
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
